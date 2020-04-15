@@ -1,6 +1,13 @@
 # Copyright 2020 Payam Yasaie <https://www.tashilgostar.com>
+# Copyright 2020 ForgeFlow <https://www.forgeflow.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 from openupgradelib import openupgrade
+
+_column_copies = {
+    'stock_location': [
+        ('usage', None, None),
+    ],
+}
 
 _model_renames = [
     ('report.stock.forecast', 'report.stock.quantity'),
@@ -13,13 +20,19 @@ _table_renames = [
 
 _field_renames = [
     ('stock.putaway.rule', 'stock_putaway_rule', 'fixed_location_id', 'location_out_id'),
+    ('stock.move', 'stock_move', 'propagate', 'propagate_cancel'),
     ('stock.rule', 'stock_rule', 'propagate', 'propagate_cancel'),
     ('stock.scrap', 'stock_scrap', 'date_expected', 'date_done'),
 ]
 
 _column_renames = {
-    'stock.inventory': [
+    'stock_inventory': [
+        ('category_id', None),
+        ('filter', None),
         ('location_id', None),
+        ('lot_id', None),
+        ('package_id', None),
+        ('partner_id', None),
         ('product_id', None),
     ],
 }
@@ -45,8 +58,9 @@ _xmlid_renames = [
 
 @openupgrade.migrate()
 def migrate(env, version):
+    openupgrade.copy_columns(env.cr, _column_copies)
     openupgrade.rename_models(env.cr, _model_renames)
     openupgrade.rename_tables(env.cr, _table_renames)
-    openupgrade.rename_fields(env.cr, _field_renames)
+    openupgrade.rename_fields(env, _field_renames)
     openupgrade.rename_columns(env.cr, _column_renames)
     openupgrade.rename_xmlids(env.cr, _xmlid_renames)
