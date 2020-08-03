@@ -26,9 +26,11 @@ website      / website                  / social_googleplus (char)      : DEL
 website      / website.menu             / group_ids (many2many)         : NEW relation: res.groups
 website      / website.menu             / mega_menu_classes (char)      : NEW
 website      / website.menu             / mega_menu_content (html)      : NEW
-website      / website.rewrite          / name (char)                   : NEW required
 website      / website.rewrite          / route_id (many2one)           : NEW relation: website.route
 # NOTHING TO DO
+
+website      / website.rewrite          / name (char)                   : NEW required
+# DONE: post-migration: filled name with some heuristic name
 
 website      / website.redirect         / type (selection)              : DEL required, selection_keys: ['301', '302'], req_default: function
 website      / website.rewrite          / redirect_type (selection)     : NEW selection_keys: ['301', '302', '308', '404'], hasdefault
