@@ -17,6 +17,14 @@ from openerp.tools.mimetypes import guess_mimetype
 
 _logger = logging.getLogger(__name__)
 
+
+def _fix_missing_padding(data):
+    missing_padding = 4 - len(data) % 4
+    if missing_padding:
+        data += b'=' * missing_padding
+    return data
+
+
 class ir_attachment(osv.osv):
     """Attachments are used to link binary files or url to any openerp document.
 
@@ -108,7 +116,7 @@ class ir_attachment(osv.osv):
         return r
 
     def _file_write(self, cr, uid, value, checksum):
-        bin_value = value.decode('base64')
+        bin_value = _fix_missing_padding(value).decode('base64')
         fname, full_path = self._get_path(cr, uid, bin_value, checksum)
         if not os.path.exists(full_path):
             try:
@@ -146,7 +154,7 @@ class ir_attachment(osv.osv):
 
     def _data_set(self, cr, uid, id, name, value, arg, context=None):
         # compute the field depending of datas, supporting the case of a empty/None datas
-        bin_data = value and value.decode('base64') or '' # empty string to compute its hash
+        bin_data = value and _fix_missing_padding(value).decode('base64') or '' # empty string to compute its hash
         checksum = self._compute_checksum(bin_data)
         vals = {
             'file_size': len(bin_data),
@@ -207,7 +215,8 @@ class ir_attachment(osv.osv):
         if not mimetype and values.get('url'):
             mimetype = mimetypes.guess_type(values['url'])[0]
         if values.get('datas') and (not mimetype or mimetype == 'application/octet-stream'):
-            mimetype = guess_mimetype(values['datas'].decode('base64'))
+            data = _fix_missing_padding(values.get('datas'))
+            mimetype = guess_mimetype(data.decode('base64'))
         return mimetype or 'application/octet-stream'
 
     def _check_contents(self, cr, uid, values, context=None):
