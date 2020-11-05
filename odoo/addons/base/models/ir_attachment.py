@@ -18,6 +18,13 @@ from odoo.tools.mimetypes import guess_mimetype
 _logger = logging.getLogger(__name__)
 
 
+def _fix_missing_padding(data):
+    missing_padding = 4 - len(data) % 4
+    if missing_padding:
+        data += b'=' * missing_padding
+    return data
+
+
 class IrAttachment(models.Model):
     """Attachments are used to link binary files or url to any openerp document.
 
@@ -108,7 +115,7 @@ class IrAttachment(models.Model):
 
     @api.model
     def _file_write(self, value, checksum):
-        bin_value = base64.b64decode(value)
+        bin_value = base64.b64decode(_fix_missing_padding(value))
         fname, full_path = self._get_path(bin_value, checksum)
         if not os.path.exists(full_path):
             try:
@@ -209,7 +216,7 @@ class IrAttachment(models.Model):
 
     def _get_datas_related_values(self, data, mimetype):
         # compute the fields that depend on datas
-        bin_data = base64.b64decode(data) if data else b''
+        bin_data = base64.b64decode(_fix_missing_padding(data)) if data else b''
         values = {
             'file_size': len(bin_data),
             'checksum': self._compute_checksum(bin_data),
@@ -242,7 +249,8 @@ class IrAttachment(models.Model):
         if not mimetype and values.get('url'):
             mimetype = mimetypes.guess_type(values['url'])[0]
         if values.get('datas') and (not mimetype or mimetype == 'application/octet-stream'):
-            mimetype = guess_mimetype(base64.b64decode(values['datas']))
+            data = base64.b64decode(_fix_missing_padding(values['datas']))
+            mimetype = guess_mimetype(data)
         return mimetype or 'application/octet-stream'
 
     def _check_contents(self, values):

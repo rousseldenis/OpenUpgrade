@@ -1,7 +1,10 @@
 # Copyright 2020 ForgeFlow <http://www.forgeflow.com>
 # Copyright 2020 Tecnativa - Pedro M. Baeza
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+import logging
 from openupgradelib import openupgrade
+
+_logger = logging.getLogger(__name__)
 
 
 def fill_product_template_attribute_value_attribute_line_id(env):
@@ -58,7 +61,12 @@ def convert_image_attachments(env):
             ('res_id', '!=', False),
         ])
         for attachment in attachments:
-            Model.browse(attachment.res_id).image_1920 = attachment.datas
+            try:
+                product = Model.browse(attachment.res_id)
+                product.image_1920 = attachment.datas
+            except Exception:
+                _logger.debug("The product " + product.name + " / " + str(product.id) + " image is not converted.")
+                pass
 
 
 @openupgrade.migrate()

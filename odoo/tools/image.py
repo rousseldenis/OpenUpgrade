@@ -47,6 +47,13 @@ EXIF_TAG_ORIENTATION_TO_TRANSPOSE_METHODS = {  # Initial side on 1st row/col:
 IMAGE_MAX_RESOLUTION = 45e6
 
 
+def _fix_missing_padding(data):
+    missing_padding = 4 - len(data) % 4
+    if missing_padding:
+        data += b'=' * missing_padding
+    return data
+
+
 class ImageProcess():
 
     def __init__(self, base64_source, verify_resolution=True):
@@ -402,7 +409,7 @@ def base64_to_image(base64_source):
     :raise: UserError if the base64 is incorrect or the image can't be identified by PIL
     """
     try:
-        return Image.open(io.BytesIO(base64.b64decode(base64_source)))
+        return Image.open(io.BytesIO(base64.b64decode(_fix_missing_padding(base64_source))))
     except (OSError, binascii.Error):
         raise UserError(_("This file could not be decoded as an image file. Please try with a different file."))
 
